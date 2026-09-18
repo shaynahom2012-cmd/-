@@ -22,7 +22,7 @@ def load_data():
         with open("data.json","r",encoding="utf-8") as f: return json.load(f)
     except: return {}
 def save_data(d):
-    with open("data.json","w",encoding="utf-8") as f: json.dump(f,f)
+    with open("data.json","w",encoding="utf-8") as f: json.dump(d,f,ensure_ascii=False,indent=2)
 def get_user_data(uid):
     data=load_data()
     s=str(uid)
@@ -32,21 +32,25 @@ def get_user_data(uid):
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user}")
-    await bot.tree.sync()
+    try:
+        synced = await bot.tree.sync()
+        print(f"Synced {len(synced)}")
+    except Exception as e:
+        print(e)
 
 @bot.tree.command(name="balance", description="בדוק יתרה")
 async def balance(interaction: discord.Interaction):
     d=get_user_data(interaction.user.id)
-    await interaction.response.send_message(f"💰 יש לך {d['balance']}")
+    await interaction.response.send_message(f"💰 יש לך {d['balance']} מטבעות")
 
 @bot.tree.command(name="daily", description="בונוס יומי")
 async def daily(interaction: discord.Interaction):
     data=load_data(); uid=str(interaction.user.id); ud=get_user_data(interaction.user.id)
     ud["balance"]+=500; data[uid]=ud; save_data(data)
-    await interaction.response.send_message(f"קיבלת 500! יש לך {ud['balance']}")
+    await interaction.response.send_message(f"קיבלת 500! יתרה: {ud['balance']}")
 
 @bot.tree.command(name="coinflip", description="הטלת מטבע")
-@app_commands.describe(amount="סכום", choice="head/tail")
+@app_commands.describe(amount="סכום", choice="head או tail")
 async def coinflip(interaction: discord.Interaction, amount: int, choice: str):
     ud=get_user_data(interaction.user.id)
     if amount>ud["balance"] or amount<=0:
