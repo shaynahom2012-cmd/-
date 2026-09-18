@@ -22,7 +22,7 @@ def load_data():
         with open("data.json","r",encoding="utf-8") as f: return json.load(f)
     except: return {}
 def save_data(d):
-    with open("data.json","w",encoding="utf-8") as f: json.dump(d,f,ensure_ascii=False,indent=2)
+    with open("data.json","w",encoding="utf-8") as f: json.dump(d,f,indent=2)
 def get_user_data(uid):
     data=load_data()
     s=str(uid)
@@ -38,27 +38,27 @@ async def on_ready():
     except Exception as e:
         print(e)
 
-@bot.tree.command(name="balance", description="בדוק יתרה")
+@bot.tree.command(name="balance", description="Check your balance")
 async def balance(interaction: discord.Interaction):
     d=get_user_data(interaction.user.id)
-    await interaction.response.send_message(f"💰 יש לך {d['balance']} מטבעות")
+    await interaction.response.send_message(f"You have {d['balance']} coins")
 
-@bot.tree.command(name="daily", description="בונוס יומי")
+@bot.tree.command(name="daily", description="Claim daily 500 coins")
 async def daily(interaction: discord.Interaction):
     data=load_data(); uid=str(interaction.user.id); ud=get_user_data(interaction.user.id)
     ud["balance"]+=500; data[uid]=ud; save_data(data)
-    await interaction.response.send_message(f"קיבלת 500! יתרה: {ud['balance']}")
+    await interaction.response.send_message(f"You claimed 500! Balance: {ud['balance']}")
 
-@bot.tree.command(name="coinflip", description="הטלת מטבע")
-@app_commands.describe(amount="סכום", choice="head או tail")
+@bot.tree.command(name="coinflip", description="Coinflip gamble")
+@app_commands.describe(amount="Amount to bet", choice="head or tail")
 async def coinflip(interaction: discord.Interaction, amount: int, choice: str):
     ud=get_user_data(interaction.user.id)
     if amount>ud["balance"] or amount<=0:
-        await interaction.response.send_message("סכום לא תקין!", ephemeral=True); return
+        await interaction.response.send_message("Invalid amount!", ephemeral=True); return
     result=random.choice(["head","tail"]); data=load_data(); uid=str(interaction.user.id)
-    if choice.lower()==result: ud["balance"]+=amount; msg=f"ניצחת! יצא {result}"
-    else: ud["balance"]-=amount; msg=f"הפסדת! יצא {result}"
+    if choice.lower()==result: ud["balance"]+=amount; msg=f"You won! It was {result}"
+    else: ud["balance"]-=amount; msg=f"You lost! It was {result}"
     data[uid]=ud; save_data(data)
-    await interaction.response.send_message(f"{msg} | יתרה: {ud['balance']}")
+    await interaction.response.send_message(f"{msg} | Balance: {ud['balance']}")
 
 bot.run(os.getenv("DISCORD_TOKEN"))
