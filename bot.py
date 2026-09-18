@@ -2,18 +2,35 @@ import discord
 from discord.ext import commands
 from discord import app_commands
 import os, json, random
+from flask import Flask
+import threading
+
+app = Flask(__name__)
+@app.route('/')
+def home():
+    return "Bot is online!"
+
+def run_web():
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host='0.0.0.0', port=port)
+
+threading.Thread(target=run_web, daemon=True).start()
 
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 def load_data():
-    if not os.path.exists("data.json"): return {}
+    if not os.path.exists("data.json"):
+        return {}
     try:
-        with open("data.json","r",encoding="utf-8") as f: return json.load(f)
-    except: return {}
+        with open("data.json","r",encoding="utf-8") as f:
+            return json.load(f)
+    except:
+        return {}
 
 def save_data(d):
-    with open("data.json","w",encoding="utf-8") as f: json.dump(d,f,indent=2)
+    with open("data.json","w",encoding="utf-8") as f:
+        json.dump(d,f,indent=2)
 
 def get_user_data(uid):
     data=load_data()
