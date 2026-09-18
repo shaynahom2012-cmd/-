@@ -19,7 +19,7 @@ threading.Thread(target=run_web, daemon=True).start()
 intents = discord.Intents.default()
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-ADMIN_ID = os.getenv("ADMIN_ID") # Put your Discord ID here in Render Environment
+ADMIN_ID = os.getenv("ADMIN_ID")
 
 def load_data():
     if not os.path.exists("data.json"):
@@ -43,7 +43,6 @@ def get_user_data(uid):
     return data[s]
 
 def is_admin(interaction: discord.Interaction):
-    # ONLY YOU are admin - locked to ADMIN_ID
     if not ADMIN_ID:
         return False
     return str(interaction.user.id) == str(ADMIN_ID)
@@ -52,8 +51,17 @@ def is_admin(interaction: discord.Interaction):
 async def on_ready():
     print(f"Logged in as {bot.user}")
     try:
+        # Global sync
         synced = await bot.tree.sync()
-        print(f"Synced {len(synced)} commands")
+        print(f"Synced {len(synced)} commands globally")
+        # Instant sync to all servers the bot is in (fix for "not showing")
+        for guild in bot.guilds:
+            try:
+                bot.tree.copy_global_to(guild=guild)
+                await bot.tree.sync(guild=guild)
+                print(f"Synced to guild {guild.id}")
+            except Exception as e:
+                print(f"Guild sync failed {guild.id}: {e}")
     except Exception as e:
         print(e)
 
@@ -167,12 +175,12 @@ async def leaderboard(interaction: discord.Interaction):
         text+=f"{i}. <@{uid}> - {ud.get('balance',0)} coins\n"
     await interaction.response.send_message(text)
 
-# --- ADMIN COMMANDS ---
+# --- ADMIN COMMANDS (LOCKED TO YOU ONLY) ---
 @bot.tree.command(name="admin_add", description="Admin: Add coins to user")
 @app_commands.describe(user="User to add coins to", amount="Amount to add")
 async def admin_add(interaction: discord.Interaction, user: discord.Member, amount: int):
     if not is_admin(interaction):
-        await interaction.response.send_message("You are not admin!", ephemeral=True)
+        await interaction.response.send_message("You are not admin! Set ADMIN_ID", ephemeral=True)
         return
     data=load_data(); uid=str(user.id)
     ud=get_user_data(user.id)
@@ -184,7 +192,7 @@ async def admin_add(interaction: discord.Interaction, user: discord.Member, amou
 @app_commands.describe(user="User to remove coins from", amount="Amount to remove")
 async def admin_remove(interaction: discord.Interaction, user: discord.Member, amount: int):
     if not is_admin(interaction):
-        await interaction.response.send_message("You are not admin!", ephemeral=True)
+        await interaction.response.send_message("You are not admin! Set ADMIN_ID", ephemeral=True)
         return
     data=load_data(); uid=str(user.id)
     ud=get_user_data(user.id)
@@ -196,7 +204,7 @@ async def admin_remove(interaction: discord.Interaction, user: discord.Member, a
 @app_commands.describe(user="User to set", amount="New balance")
 async def admin_set(interaction: discord.Interaction, user: discord.Member, amount: int):
     if not is_admin(interaction):
-        await interaction.response.send_message("You are not admin!", ephemeral=True)
+        await interaction.response.send_message("You are not admin! Set ADMIN_ID", ephemeral=True)
         return
     data=load_data(); uid=str(user.id)
     ud=get_user_data(user.id)
