@@ -271,9 +271,6 @@ async def blackjack(interaction: discord.Interaction, amount: int):
     if u["coins"]<amount or amount<=0:
         await interaction.response.send_message("אין לך מספיק כסף!", ephemeral=True)
         return
-    if amount<100:
-        await interaction.response.send_message("מינימום 100 מטבעות לבלאקג'ק", ephemeral=True)
-        return
     suits=["♠️","♥️","♦️","♣️"]
     ranks=["A","2","3","4","5","6","7","8","9","10","J","Q","K"]
     deck=[f"{r}{s}" for s in suits for r in ranks]
