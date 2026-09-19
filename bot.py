@@ -57,7 +57,11 @@ def bj_value(hand):
     val=0
     aces=0
     for card in hand:
-        rank = card[:-1]
+        # card is like "A♠️" or "10♥️" - rank is first char(s)
+        if card.startswith("10"):
+            rank="10"
+        else:
+            rank=card[0]
         if rank in ["J","Q","K"]:
             val+=10
         elif rank=="A":
@@ -86,7 +90,7 @@ class BlackjackView(discord.ui.View):
         p_val=bj_value(self.player)
         d_val=bj_value(self.dealer) if reveal else "?"
         d_show=" ".join(self.dealer) if reveal else f"{self.dealer[0]} ❓"
-        embed=discord.Embed(title="🃏 בלאקג'ק", color=discord.Color.dark_gold())
+        embed=discord.Embed(title="🃏 בלאקג'ק", color=discord.Color.gold())
         embed.add_field(name=f"אתה ({p_val})", value=bj_str(self.player), inline=False)
         embed.add_field(name=f"דילר ({d_val})", value=d_show, inline=False)
         embed.add_field(name="הימור", value=f"{self.bet} מטבעות", inline=False)
